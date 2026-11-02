@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Integral JSON numbers",
+  "countdownTones": [],
+  "sets": [{"title": "Manual", "reps": 2.0, "subsets": [], "skipLast": false, "color": 0.0, "durationMicroseconds": null}]
+}

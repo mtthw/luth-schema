@@ -1,0 +1,178 @@
+# Lúth schema
+
+The portable exercise contract for Lúth, with small TypeScript
+and Dart SDKs. No Flutter, React, database, account or server dependency.
+
+This is an initial **0.0.1 draft**. Consumers have not yet been migrated. Nothing
+here publishes packages or manages releases; there is no release-please setup.
+
+## Contents
+
+- `schemas/`: the JSON Schema draft 2020-12 exercise definition.
+- `src/lib/`: browser-safe TypeScript validation, serialization and migration helpers.
+- `lib/`: Flutter-free Dart validation, serialization and migration helpers.
+- `fixtures/`: shared valid/invalid exercise examples.
+- `test/` and `tool/`: SDK tests and bidirectional TypeScript/Dart compatibility checks.
+
+## Versioning
+
+An exercise carries `"schemaVersion": "0.0.1"`. Its stable schema ID is
+`urn:luth:schema:exercise:0.0.1`; it does not depend on owning a domain.
+
+Document versions are semver strings, separate from SDK package versions.
+After 1.0, major versions signal breaking contract changes, minor versions
+backward-compatible additions, and patches compatible fixes or clarifications.
+During 0.x the contract is experimental and compatibility is not guaranteed.
+The SDKs currently accept **only `"0.0.1"`**, not arbitrary semver ranges:
+support for another version requires explicit validation and migration rules.
+Incompatible document changes require an explicit migration. Package releases
+also use semver independently; pin consumers to a reviewed commit during 0.x.
+
+Validation never silently upgrades a document. `migrateExercise` explicitly
+converts the prototype's `formatVersion: 1` to `schemaVersion: "0.0.1"`, then validates
+the result. Current documents are accepted too. Unknown versions and mixed
+legacy/new version fields are rejected. This is a document migration, not a
+SQLite migration or an exercise's saved revision.
+
+## Exercise contract
+
+See [`fixtures/valid/hold.json`](fixtures/valid/hold.json) for a complete example.
+An exercise has a title, default countdown tones and a nonempty `sets` array.
+Each subset has a title, `reps`, `subsets` and `skipLast`.
+
+- A leaf has `subsets: []`. This is not an empty exercise: a timed leaf runs for
+  `durationMicroseconds`; a manual leaf waits for the user.
+- Timed leaves repeat `reps` times. Groups repeat their child sequence `reps`
+  times. Manual leaf `reps` is a prescription, not repeated execution.
+- `skipLast` removes the last expanded leaf of that node. An exercise must
+  still contain at least one executable step.
+- A timed node cannot have children. Nesting is at most 32 subset levels,
+  with at most 10,000 nodes and 100,000 executable steps. Every subtree must
+  obey the step budget, even if an ancestor would skip a step.
+- Titles cannot be blank. Tones accept pitches E2–C6 (`s` for sharps) and
+  lengths `automatic`, `short` or `long`. Colour is an unsigned 32-bit ARGB integer.
+- `info`, `color`, `durationMicroseconds` and subset `countdownTones` can be
+  omitted or null. SDKs normalize omissions to null without changing input.
+- Root tones are defaults. Subset null/omission inherits those defaults; `[]`
+  means silence. A group's tone override does not cascade to descendants.
+- Duration is a positive integer no greater than 9,007,199,254,740,991, for
+  exact Dart/JavaScript interchange. Mathematically integral JSON numbers
+  such as `1.0` are accepted and normalized to integers in Dart.
+- Unknown fields are rejected, not silently discarded. Inputs are JSON trees;
+  runtime objects, aliases, cycles and non-JSON values are not part of the API.
+
+JSON Schema checks structure, **not** expanded execution or nesting budgets.
+Use SDK validation for untrusted definitions. `encodeExercise` and `decodeExercise`
+cap UTF-8 JSON source at 262,144 bytes. Already-parsed `parseExercise` validates
+structure and execution, not serialized source size.
+
+## TypeScript use
+
+For local development, build this repo, then add a local dependency:
+
+```sh
+# In luth-schema
+npm ci
+# In the consuming project, when deliberately integrating it
+npm install ../luth-schema
+```
+
+Once the `v0.0.1` tag is available on GitHub, use it in the consumer's `package.json`
+(or replace it with a full reviewed commit hash):
+
+```json
+{"dependencies": {"luth-schema": "git+https://github.com/mtthw/luth-schema.git#v0.0.1"}}
+```
+
+The Git `prepare` hook builds the TypeScript package; Node >=22.12 and npm are
+required during installation. Keep lifecycle scripts enabled for Git installs.
+`private: true` prevents accidental registry publishing, not Git dependency use.
+
+```ts
+import { decodeExercise, encodeExercise } from 'luth-schema';
+
+const exercise = decodeExercise(source);
+const json = encodeExercise(exercise);
+```
+
+Other exports include `parseExercise`, `validateExercise` (a result rather than
+an exception), `migrateExercise`, `countSteps` and `canonicalJson`. The schema is
+available at `luth-schema/schemas/exercise.schema.json`.
+
+## Dart use
+
+Use a local path while integrating, or pin the public repository at a release tag
+or full commit hash once it is available on GitHub:
+
+```yaml
+dependencies:
+  luth_schema:
+    path: ../luth-schema
+# Or:
+#  luth_schema:
+#    git:
+#      url: https://github.com/mtthw/luth-schema.git
+#      ref: v0.0.1
+```
+
+```dart
+import 'package:luth_schema/luth_schema.dart';
+
+final exercise = decodeExercise(source);
+final json = encodeExercise(exercise);
+```
+
+The Dart API returns copied JSON maps/lists; consumers adapt them to their own
+models. Validation throws `FormatException`. The package has no `dart:io` or
+Flutter dependency and can also be used on the web.
+
+## Serialization and application boundaries
+
+`encodeExercise` validates and normalizes the exercise, then returns the exercise
+JSON directly: there is no wrapper, transfer ID or separate transfer schema.
+Output is compact JSON with object keys sorted by UTF-16 code units, preserving
+strings and array order without Unicode normalization. All numbers are safe integers.
+`canonicalJson` is a lower-level sorted-key serializer and does not validate input.
+
+The web and app own QR encoding, compression, links, trusted-origin policies and
+bounded decompression. They also decide how to interpret an import, ask for
+confirmation, handle duplicates and assign storage identities. This package
+only validates the resulting exercise content; it does not prescribe a QR format.
+
+### Differences from the private prototypes
+
+- Exercise `formatVersion` becomes `schemaVersion` through explicit migration.
+- Unknown fields now fail, and duration is limited to JavaScript safe integers.
+- Integral floating-point JSON notation is accepted consistently in Dart and TS.
+- JSON serialization and decoding enforce the source-size limit.
+
+Consumers that support legacy QR links must decode those links themselves and
+explicitly migrate the extracted exercise. No consumer repository is modified here.
+
+## Development
+
+Use Node >=22.12, npm, `just` and FVM. `.fvmrc` pins the Dart SDK via Flutter;
+the package itself does not depend on Flutter. No global packages are installed.
+
+```sh
+just install
+just check       # TS build/types/tests, Dart analyze/format/tests, JSON parity
+just pack-check  # inspect npm package contents without publishing
+```
+
+Both SDKs run the same fixtures. The parity runner checks validation,
+normalization, bidirectional exercise JSON serialization and malformed inputs.
+
+## First Git release
+
+No npm or pub.dev publication is required: both consumers can install from the
+public Git repository. `private: true` and `publish_to: none` intentionally prevent
+accidental registry publication.
+
+Before releasing, run `just check` and `just pack-check`, review the files, commit
+them and create an annotated `v0.0.1` tag on that commit. The commit and tag must
+then be pushed by the maintainer before the dependency examples above will work.
+Never move a released tag. Commit each consumer's lockfile after installing it.
+
+Adding the dependency does not replace a consumer's existing codec; integration
+and any required legacy-import support are separate changes.

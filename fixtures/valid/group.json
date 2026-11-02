@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Lúth — rounds 🏋️",
+  "countdownTones": [{"pitch": "E2", "length": "automatic"}, {"pitch": "C6", "length": "long"}],
+  "sets": [{
+    "title": "Three rounds", "reps": 3, "skipLast": true,
+    "countdownTones": [], "subsets": [
+      {"title": "Squat", "info": "Controlled movement", "reps": 10, "subsets": [], "skipLast": false, "color": 4294967295},
+      {"title": "Rest", "reps": 1, "durationMicroseconds": 10000000, "subsets": [], "skipLast": false, "countdownTones": []}
+    ]
+  }]
+}

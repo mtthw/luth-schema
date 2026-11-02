@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Simple hold",
+  "countdownTones": [{"pitch": "C5", "length": "short"}],
+  "sets": [{
+    "title": "Hold", "reps": 1, "durationMicroseconds": 30000000,
+    "subsets": [], "skipLast": false
+  }]
+}

@@ -1,0 +1,1 @@
+{"schemaVersion": "0.0.1", "title": "Timed group", "countdownTones": [], "sets": [{"title": "Group", "reps": 1, "durationMicroseconds": 1, "skipLast": false, "subsets": [{"title": "Manual", "reps": 1, "subsets": [], "skipLast": false}]}]}

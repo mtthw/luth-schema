@@ -1,0 +1,35 @@
+{
+  "name": "luth-schema",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mtthw/luth-schema.git"
+  },
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "exports": {
+    ".": {
+      "types": "./dist/src/lib/index.d.ts",
+      "import": "./dist/src/lib/index.js"
+    },
+    "./schemas/exercise.schema.json": "./schemas/exercise.schema.json"
+  },
+  "files": ["dist", "schemas", "fixtures", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "parity": "node tool/check-parity.mjs",
+    "check": "npm run build && npm run typecheck && npm test",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.1.0"
+  }
+}
