@@ -50,7 +50,10 @@ Each subset has a title, `reps`, `subsets` and `skipLast`.
   with at most 10,000 nodes and 100,000 executable steps. Every subtree must
   obey the step budget, even if an ancestor would skip a step.
 - Titles cannot be blank. Tones accept pitches E2–C6 (`s` for sharps) and
-  lengths `automatic`, `short` or `long`. Colour is an unsigned 32-bit ARGB integer.
+  lengths `automatic`, `short` or `long`.
+- A colour is an unsigned 32-bit ARGB integer, or an object with `light` and
+  `dark` ARGB integers for mode-dependent colours. The exercise root and each
+  subset accept an optional `color` of either form.
 - `info`, `color`, `durationMicroseconds` and subset `countdownTones` can be
   omitted or null. SDKs normalize omissions to null without changing input.
 - Root tones are defaults. Subset null/omission inherits those defaults; `[]`

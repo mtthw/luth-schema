@@ -36,6 +36,43 @@ void main() {
       throwsFormatException,
     );
   });
+  test('accepts single ARGB colors and light/dark pairs at both levels', () {
+    final input = hold();
+    input['color'] = {'light': 4280311021, 'dark': 4280243200};
+    object(input['sets'][0] as Map<String, dynamic>)['color'] = 4294967295;
+    final parsed = parseExercise(input);
+    expect(parsed['color'], {'light': 4280311021, 'dark': 4280243200});
+    expect(
+      object(parsed['sets'][0] as Map<String, dynamic>)['color'],
+      4294967295,
+    );
+    expect(encodeExercise(parsed), encodeExercise(parseExercise(parsed)));
+    expect(parseExercise(hold())['color'], isNull);
+    for (final bad in [
+      '0xFF2F80ED',
+      -1,
+      4294967296,
+      1.5,
+      {'light': 1},
+      {'dark': 1},
+      {'light': 1, 'dark': 2, 'extra': 3},
+      [1, 2],
+      true,
+    ]) {
+      expect(
+        () => parseExercise({...hold(), 'color': bad}),
+        throwsFormatException,
+        reason: 'root color $bad',
+      );
+      final withSet = hold();
+      object(withSet['sets'][0] as Map<String, dynamic>)['color'] = bad;
+      expect(
+        () => parseExercise(withSet),
+        throwsFormatException,
+        reason: 'set color $bad',
+      );
+    }
+  });
   test('requires a supported exercise semver string', () {
     for (final version in [
       1,
@@ -121,7 +158,13 @@ void main() {
         final source = encodeExercise(input);
         expect(decodeExercise(source), parseExercise(input));
         final keys = object(jsonDecode(source)).keys.toList()..sort();
-        expect(keys, ['countdownTones', 'schemaVersion', 'sets', 'title']);
+        expect(keys, [
+          'color',
+          'countdownTones',
+          'schemaVersion',
+          'sets',
+          'title',
+        ]);
       }
       expect(
         () => encodeExercise({...hold(), 'kind': 'exercise'}),
