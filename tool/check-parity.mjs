@@ -25,6 +25,14 @@ for (const pitch of ['E2', 'Fs2', 'As3', 'Cs4', 'B5', 'C6']) {
 for (const title of ['\ud800', '\udfff', 'é', 'e\u0301']) {
   valid.push({ ...structuredClone(base), title });
 }
+// Exercise both color forms at root and subset level.
+valid.push({ ...structuredClone(base), color: 4280311021 });
+valid.push({ ...structuredClone(base), color: { light: 4280311021, dark: 4280243200 } });
+{
+  const paired = structuredClone(base);
+  paired.sets[0].color = { light: 4278190080, dark: 4293980160 };
+  valid.push(paired);
+}
 const encoded = dart(valid.map(value => ({ action: 'exercise', value })));
 const reverse = [];
 for (let i = 0; i < valid.length; i++) {
@@ -53,7 +61,7 @@ for (const schemaVersion of [1, 0.001, null, '', '0.0', '00.0.1', 'v0.0.1', '0.0
 for (const [key, values] of Object.entries({
   title: ['', ' ', '\u0085', '\ufeff', '\u2007', '\u202f', '\u200b', 3],
   reps: [0, -1, 1.5, 100001, '1', null],
-  color: [-1, 4294967296, 1.5, '0'],
+  color: [-1, 4294967296, 1.5, '0', true, { light: 1 }, { dark: 1 }, { light: 1, dark: -1 }, { light: 1, dark: 2, extra: 3 }, [1, 2]],
   durationMicroseconds: [0, -1, 0.5, 9007199254740992, '1'],
   skipLast: [0, null, 'false'],
   countdownTones: [false, [{}], [{ pitch: 'Cs6', length: 'short' }], [{ pitch: 'E2\n', length: 'short' }]],
@@ -63,6 +71,9 @@ for (const [key, values] of Object.entries({
     input.sets[0][key] = value;
     candidates.push(input);
   }
+}
+for (const color of ['red', -1, { light: 1 }, true]) {
+  candidates.push({ ...structuredClone(base), color });
 }
 dart(candidates.map(value => ({ action: 'validate', value }))).forEach((result, i) => {
   assert.equal(result.ok, validateExercise(candidates[i]).ok, `Validation mismatch: ${JSON.stringify(candidates[i])}`);

@@ -6,6 +6,9 @@ export interface CountdownTone {
   length: 'automatic' | 'short' | 'long';
 }
 
+/** A single ARGB integer, or an explicit light/dark mode pair. */
+export type ExerciseColor = number | { light: number; dark: number };
+
 export interface ExerciseSet {
   title: string;
   reps: number;
@@ -13,7 +16,7 @@ export interface ExerciseSet {
   skipLast: boolean;
   info: string | null;
   durationMicroseconds: number | null;
-  color: number | null;
+  color: ExerciseColor | null;
   countdownTones: CountdownTone[] | null;
 }
 
@@ -21,6 +24,7 @@ export interface ExerciseDefinition {
   schemaVersion: '0.0.1';
   title: string;
   countdownTones: CountdownTone[];
+  color: ExerciseColor | null;
   sets: ExerciseSet[];
 }
 
@@ -93,7 +97,8 @@ export function parseExercise(input: unknown): ExerciseDefinition {
   const value = input as unknown as ExerciseDefinition;
   const exercise: ExerciseDefinition = {
     schemaVersion: '0.0.1', title: value.title,
-    countdownTones: tones(value.countdownTones), sets: value.sets.map(normalizeSet),
+    countdownTones: tones(value.countdownTones), color: value.color ?? null,
+    sets: value.sets.map(normalizeSet),
   };
   if (countSteps(exercise.sets) === 0) throw new Error('An exercise needs an executable step');
   return exercise;

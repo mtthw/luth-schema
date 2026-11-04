@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Mode-colored workout",
+  "countdownTones": [{"pitch": "G4", "length": "automatic"}],
+  "color": {"light": 4280311021, "dark": 4280243200},
+  "sets": [{
+    "title": "Rounds", "reps": 2, "subsets": [
+      {"title": "Press", "reps": 8, "subsets": [], "skipLast": false, "color": 4287102554},
+      {"title": "Hold", "reps": 1, "durationMicroseconds": 45000000, "subsets": [], "skipLast": false, "color": {"light": 4278190080, "dark": 4293980160}}
+    ], "skipLast": false}
+  ]
+}

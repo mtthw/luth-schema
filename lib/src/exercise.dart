@@ -87,6 +87,23 @@ class _Budget {
   int nodes = 0;
 }
 
+// A color is a single ARGB integer or an explicit light/dark mode pair.
+Object? _color(Object? value) {
+  if (value == null) return null;
+  if (value is Map) {
+    if (value.length != 2 ||
+        !value.containsKey('light') ||
+        !value.containsKey('dark')) {
+      _fail('Expected light and dark ARGB integers');
+    }
+    return {
+      'light': _integer(value['light'], 0, 0xffffffff),
+      'dark': _integer(value['dark'], 0, 0xffffffff),
+    };
+  }
+  return _integer(value, 0, 0xffffffff);
+}
+
 JsonObject _subset(Object? value, int depth, _Budget budget) {
   if (depth >= maxDepth || ++budget.nodes > maxNodes) {
     _fail('Exercise definition is too complex');
@@ -97,6 +114,7 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
     ['title', 'reps', 'subsets', 'skipLast'],
     ['info', 'durationMicroseconds', 'color', 'countdownTones'],
   );
+  final color = _color(set['color']);
   final children = _list(set['subsets']);
   if (children.length > maxNodes) _fail('Too many subsets');
   final duration = set['durationMicroseconds'] == null
@@ -113,9 +131,7 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
     'skipLast': set['skipLast'],
     'info': set['info'],
     'durationMicroseconds': duration,
-    'color': set['color'] == null
-        ? null
-        : _integer(set['color'], 0, 0xffffffff),
+    'color': color,
     'countdownTones': set['countdownTones'] == null
         ? null
         : _tones(set['countdownTones']),
@@ -148,7 +164,7 @@ int countSteps(List<dynamic> sets) {
 /// Validate and copy a definition, normalizing optional fields to null.
 JsonObject parseExercise(Object? input) {
   final value = object(input);
-  _keys(value, ['schemaVersion', 'title', 'countdownTones', 'sets'], []);
+  _keys(value, ['schemaVersion', 'title', 'countdownTones', 'sets'], ['color']);
   if (value['schemaVersion'] != '0.0.1') {
     _fail('Unsupported exercise schema version');
   }
@@ -159,6 +175,7 @@ JsonObject parseExercise(Object? input) {
     'schemaVersion': '0.0.1',
     'title': _title(value['title']),
     'countdownTones': _tones(value['countdownTones']),
+    'color': _color(value['color']),
     'sets': sets.map((set) => _subset(set, 0, budget)).toList(),
   };
   if (countSteps(exercise['sets'] as List<dynamic>) == 0) {

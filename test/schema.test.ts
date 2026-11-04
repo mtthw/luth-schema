@@ -31,6 +31,24 @@ it('migrates legacy documents only on explicit request', () => {
   expect(() => migrateExercise({ ...legacy, formatVersion: 2 })).toThrow();
 });
 
+it('accepts single ARGB colors and light/dark pairs at both levels', () => {
+  const input = hold();
+  input.color = { light: 4280311021, dark: 4280243200 };
+  input.sets[0].color = 4294967295;
+  const parsed = parseExercise(input);
+  expect(parsed.color).toEqual({ light: 4280311021, dark: 4280243200 });
+  expect(parsed.sets[0]!.color).toBe(4294967295);
+  expect(encodeExercise(parsed)).toBe(encodeExercise(parseExercise(parsed)));
+  expect(parseExercise(hold()).color).toBeNull();
+  const bad = ['0xFF2F80ED', -1, 4294967296, 1.5, { light: 1 }, { dark: 1 }, { light: 1, dark: 2, extra: 3 }, [1, 2], true];
+  for (const color of bad) {
+    expect(() => parseExercise({ ...hold(), color })).toThrow();
+    const withSet = hold();
+    withSet.sets[0].color = color as number;
+    expect(() => parseExercise(withSet)).toThrow();
+  }
+});
+
 it('requires an explicitly supported exercise semver string', () => {
   for (const schemaVersion of [1, 0.001, null, '', '0.0', '00.0.1', 'v0.0.1', '0.0.2', '0.1.0', '1.0.0', '0.0.1-beta.1', '0.0.1+build.1']) {
     expect(() => parseExercise({ ...hold(), schemaVersion })).toThrow();
@@ -77,7 +95,7 @@ it('serializes only validated exercise JSON and round trips every valid fixture'
     const input = fixture(`valid/${file}`);
     const source = encodeExercise(input);
     expect(decodeExercise(source)).toEqual(parseExercise(input));
-    expect(Object.keys(JSON.parse(source)).sort()).toEqual(['countdownTones', 'schemaVersion', 'sets', 'title']);
+    expect(Object.keys(JSON.parse(source)).sort()).toEqual(['color', 'countdownTones', 'schemaVersion', 'sets', 'title']);
   }
   expect(() => encodeExercise({ ...hold(), kind: 'exercise' })).toThrow();
   expect(() => encodeExercise(fixture('invalid/empty.json'))).toThrow();
