@@ -1,0 +1,2 @@
+# Markdown fixtures test exact line endings (breaks.md uses CRLF).
+fixtures/markdown/*.md -text

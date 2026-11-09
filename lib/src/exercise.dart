@@ -8,6 +8,9 @@ const maxSteps = 100000;
 const maxSourceBytes = 262144;
 const maxSafeInteger = 9007199254740991;
 
+/// Maximum description length in Unicode code points.
+const maxDescriptionLength = 10000;
+
 Never _fail(String message) => throw FormatException(message);
 
 JsonObject object(Object? value) {
@@ -40,6 +43,15 @@ String _title(Object? value) {
   final blank = RegExp(r'^[\s\u0085\uFEFF]*$', unicode: true);
   if (value is! String || blank.hasMatch(value)) {
     _fail('Expected a nonblank title');
+  }
+  return value;
+}
+
+/// CommonMark text, displayed with the subset described in the README.
+String? _description(Object? value) {
+  if (value == null) return null;
+  if (value is! String || value.runes.length > maxDescriptionLength) {
+    _fail('Expected a description of at most $maxDescriptionLength characters');
   }
   return value;
 }
@@ -112,7 +124,7 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
   _keys(
     set,
     ['title', 'reps', 'subsets', 'skipLast'],
-    ['info', 'durationMicroseconds', 'color', 'countdownTones'],
+    ['description', 'durationMicroseconds', 'color', 'countdownTones'],
   );
   final color = _color(set['color']);
   final children = _list(set['subsets']);
@@ -123,13 +135,12 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
   if (duration != null && children.isNotEmpty) {
     _fail('A timed subset cannot contain subsets');
   }
-  if (set['info'] != null && set['info'] is! String) _fail('Invalid info');
   if (set['skipLast'] is! bool) _fail('Invalid skipLast');
   return {
     'title': _title(set['title']),
     'reps': _integer(set['reps'], 1, maxSteps),
     'skipLast': set['skipLast'],
-    'info': set['info'],
+    'description': _description(set['description']),
     'durationMicroseconds': duration,
     'color': color,
     'countdownTones': set['countdownTones'] == null
@@ -164,7 +175,11 @@ int countSteps(List<dynamic> sets) {
 /// Validate and copy a definition, normalizing optional fields to null.
 JsonObject parseExercise(Object? input) {
   final value = object(input);
-  _keys(value, ['schemaVersion', 'title', 'countdownTones', 'sets'], ['color']);
+  _keys(
+    value,
+    ['schemaVersion', 'title', 'countdownTones', 'sets'],
+    ['color', 'description'],
+  );
   if (value['schemaVersion'] != '0.0.1') {
     _fail('Unsupported exercise schema version');
   }
@@ -174,6 +189,7 @@ JsonObject parseExercise(Object? input) {
   final exercise = <String, dynamic>{
     'schemaVersion': '0.0.1',
     'title': _title(value['title']),
+    'description': _description(value['description']),
     'countdownTones': _tones(value['countdownTones']),
     'color': _color(value['color']),
     'sets': sets.map((set) => _subset(set, 0, budget)).toList(),
@@ -192,12 +208,40 @@ JsonObject decodeExercise(String source) {
   return parseExercise(jsonDecode(source));
 }
 
+// The prototype called a subset's description `info`. Too-deep or too-wide
+// input is left unchanged for parseExercise to reject.
+Object? _migrateLegacySet(Object? value, int depth, _Budget budget) {
+  if (value is! Map<String, dynamic> ||
+      depth >= maxDepth ||
+      ++budget.nodes > maxNodes) {
+    return value;
+  }
+  final set = Map<String, dynamic>.of(value);
+  if (set.containsKey('info') && !set.containsKey('description')) {
+    set['description'] = set.remove('info');
+  }
+  final children = set['subsets'];
+  if (children is List) {
+    set['subsets'] = children
+        .map((child) => _migrateLegacySet(child, depth + 1, budget))
+        .toList();
+  }
+  return set;
+}
+
 /// Explicit migration from the prototype's formatVersion: 1 document.
 JsonObject migrateExercise(Object? input) {
   final value = object(input);
   if (value['formatVersion'] == 1 && !value.containsKey('schemaVersion')) {
     final migrated = Map<String, dynamic>.of(value)..remove('formatVersion');
     migrated['schemaVersion'] = '0.0.1';
+    final sets = migrated['sets'];
+    if (sets is List) {
+      final budget = _Budget();
+      migrated['sets'] = sets
+          .map((set) => _migrateLegacySet(set, 0, budget))
+          .toList();
+    }
     return parseExercise(migrated);
   }
   return parseExercise(value);

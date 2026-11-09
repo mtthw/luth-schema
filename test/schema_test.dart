@@ -26,7 +26,21 @@ void main() {
     expect(encodeExercise(hold()), encodeExercise(parseExercise(hold())));
     expect(canonicalJson({'b': 1, 'a': 2}), '{"a":2,"b":1}');
     final legacy = fixture('invalid/legacy.json');
-    expect(migrateExercise(legacy)['schemaVersion'], '0.0.1');
+    final migrated = migrateExercise(legacy);
+    expect(migrated['schemaVersion'], '0.0.1');
+    final set = object(migrated['sets'][0] as Map<String, dynamic>);
+    expect(set['description'], 'Prototype notes');
+    expect(set.containsKey('info'), isFalse);
+    expect(
+      object(legacy['sets'][0] as Map<String, dynamic>)['info'],
+      'Prototype notes',
+    );
+    final normalized = parseExercise(hold());
+    expect(normalized['description'], isNull);
+    expect(
+      object(normalized['sets'][0] as Map<String, dynamic>)['description'],
+      isNull,
+    );
     expect(
       () => migrateExercise({...legacy, 'schemaVersion': '0.0.1'}),
       throwsFormatException,
@@ -71,6 +85,38 @@ void main() {
         throwsFormatException,
         reason: 'set color $bad',
       );
+    }
+  });
+  test('accepts Markdown descriptions up to the code point limit', () {
+    final described = parseExercise(fixture('valid/description.json'));
+    expect(described['description'], contains('# Warm up first'));
+    expect(
+      object(described['sets'][0] as Map<String, dynamic>)['description'],
+      'Stop if anything **hurts**.',
+    );
+    // Emoji are one code point but two UTF-16 units; the limit counts code points.
+    final longest = '😀' * maxDescriptionLength;
+    expect(
+      parseExercise({...hold(), 'description': longest})['description'],
+      longest,
+    );
+    expect(
+      () => parseExercise({...hold(), 'description': '${longest}a'}),
+      throwsFormatException,
+    );
+    for (final bad in [
+      42,
+      true,
+      ['a'],
+      {'text': 'a'},
+    ]) {
+      expect(
+        () => parseExercise({...hold(), 'description': bad}),
+        throwsFormatException,
+      );
+      final withSet = hold();
+      object(withSet['sets'][0] as Map<String, dynamic>)['description'] = bad;
+      expect(() => parseExercise(withSet), throwsFormatException);
     }
   });
   test('requires a supported exercise semver string', () {
@@ -161,6 +207,7 @@ void main() {
         expect(keys, [
           'color',
           'countdownTones',
+          'description',
           'schemaVersion',
           'sets',
           'title',

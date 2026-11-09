@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { decodeExercise, encodeExercise, validateExercise } from '../dist/src/lib/index.js';
+import { decodeExercise, encodeExercise, maxDescriptionLength, migrateExercise, validateExercise } from '../dist/src/lib/index.js';
 
 function dart(requests) {
   const result = spawnSync('fvm', ['dart', 'run', 'tool/check_parity.dart'], {
@@ -32,6 +32,14 @@ valid.push({ ...structuredClone(base), color: { light: 4280311021, dark: 4280243
   const paired = structuredClone(base);
   paired.sets[0].color = { light: 4278190080, dark: 4293980160 };
   valid.push(paired);
+}
+// Descriptions at both levels, including the code point limit (emoji are two UTF-16 units).
+valid.push({ ...structuredClone(base), description: '# Heading\n\n**Bold** and *italic* — Lúth 😀\n\n- one\n- two' });
+valid.push({ ...structuredClone(base), description: '😀'.repeat(maxDescriptionLength) });
+{
+  const described = structuredClone(base);
+  described.sets[0].description = '1. First\r\n2. Second';
+  valid.push(described);
 }
 const encoded = dart(valid.map(value => ({ action: 'exercise', value })));
 const reverse = [];
@@ -75,6 +83,18 @@ for (const [key, values] of Object.entries({
 for (const color of ['red', -1, { light: 1 }, true]) {
   candidates.push({ ...structuredClone(base), color });
 }
+const tooLong = '😀'.repeat(maxDescriptionLength) + 'a';
+for (const description of [42, true, [], {}, tooLong, 'a'.repeat(maxDescriptionLength + 1)]) {
+  candidates.push({ ...structuredClone(base), description });
+  const withSet = structuredClone(base);
+  withSet.sets[0].description = description;
+  candidates.push(withSet);
+}
+{
+  const withInfo = structuredClone(base);
+  withInfo.sets[0].info = 'Renamed to description';
+  candidates.push(withInfo);
+}
 dart(candidates.map(value => ({ action: 'validate', value }))).forEach((result, i) => {
   assert.equal(result.ok, validateExercise(candidates[i]).ok, `Validation mismatch: ${JSON.stringify(candidates[i])}`);
 });
@@ -87,4 +107,14 @@ dart(malformed.map(value => ({ action: 'decode', value }))).forEach((result, i) 
   assert.equal(result.ok, false, `Dart accepted malformed exercise ${i}`);
   assert.throws(() => decodeExercise(malformed[i]), `TypeScript accepted malformed exercise ${i}`);
 });
-console.log(`Parity passed: ${valid.length} bidirectional JSON vectors, ${candidates.length} validation cases, ${malformed.length} malformed exercises.`);
+// Legacy migration renames subset info to description in both SDKs.
+const legacy = [
+  { formatVersion: 1, title: 'Legacy', countdownTones: [], sets: [{ title: 'Hold', info: 'Notes', reps: 1, subsets: [{ title: 'Inner', info: 'Nested', reps: 1, subsets: [], skipLast: false }], skipLast: false }] },
+  { formatVersion: 1, title: 'Both', countdownTones: [], sets: [{ title: 'Hold', info: 'a', description: 'b', reps: 1, subsets: [], skipLast: false }] },
+];
+dart(legacy.map(value => ({ action: 'migrate', value }))).forEach((result, i) => {
+  let expected;
+  try { expected = { ok: true, source: encodeExercise(migrateExercise(legacy[i])) }; } catch { expected = { ok: false }; }
+  assert.deepEqual(result, expected, `Migration mismatch: ${JSON.stringify(legacy[i])}`);
+});
+console.log(`Parity passed: ${valid.length} bidirectional JSON vectors, ${candidates.length} validation cases, ${malformed.length} malformed exercises, ${legacy.length} migrations.`);

@@ -1,0 +1,47 @@
+[
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "a link alt text code <b>raw</b>",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "fenced\ncode",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "quoted ",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "text": "text",
+        "bold": false,
+        "italic": true
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "<div>block</div>",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  }
+]

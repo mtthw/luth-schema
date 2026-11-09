@@ -9,6 +9,7 @@
   "properties": {
     "schemaVersion": { "const": "0.0.1", "type": "string" },
     "title": { "$ref": "#/$defs/title" },
+    "description": { "$ref": "#/$defs/description" },
     "countdownTones": { "$ref": "#/$defs/tones" },
     "color": { "$ref": "#/$defs/color" },
     "sets": {
@@ -20,6 +21,11 @@
   },
   "$defs": {
     "title": { "type": "string", "pattern": "[^\\s\\u0085\\uFEFF]" },
+    "description": {
+      "description": "CommonMark text; apps display only the subset described in the README.",
+      "type": ["string", "null"],
+      "maxLength": 10000
+    },
     "argb": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
     "modeColor": {
       "type": "object",
@@ -56,7 +62,7 @@
       "required": ["title", "reps", "subsets", "skipLast"],
       "properties": {
         "title": { "$ref": "#/$defs/title" },
-        "info": { "type": ["string", "null"] },
+        "description": { "$ref": "#/$defs/description" },
         "reps": { "type": "integer", "minimum": 1, "maximum": 100000 },
         "durationMicroseconds": {
           "type": ["integer", "null"], "minimum": 1, "maximum": 9007199254740991

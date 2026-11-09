@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { canonicalJson, countSteps, decodeExercise, encodeExercise, maxSourceBytes, migrateExercise, parseExercise, validateExercise } from '../src/lib/index.js';
+import { canonicalJson, countSteps, decodeExercise, encodeExercise, maxDescriptionLength, maxSourceBytes, migrateExercise, parseExercise, validateExercise } from '../src/lib/index.js';
 
 const fixture = (name: string) => JSON.parse(readFileSync(`fixtures/${name}`, 'utf8'));
 const hold = () => fixture('valid/hold.json');
@@ -18,7 +18,8 @@ describe('shared fixtures', () => {
 it('normalizes null and omitted fields and ignores object key ordering', () => {
   const exercise = hold();
   const normalized = parseExercise(exercise);
-  expect(normalized.sets[0]!.info).toBeNull();
+  expect(normalized.description).toBeNull();
+  expect(normalized.sets[0]!.description).toBeNull();
   expect(encodeExercise(exercise)).toBe(encodeExercise(normalized));
   expect(canonicalJson({ b: 1, a: 2 })).toBe('{"a":2,"b":1}');
 });
@@ -26,7 +27,11 @@ it('normalizes null and omitted fields and ignores object key ordering', () => {
 it('migrates legacy documents only on explicit request', () => {
   const legacy = fixture('invalid/legacy.json');
   expect(() => parseExercise(legacy)).toThrow();
-  expect(migrateExercise(legacy).schemaVersion).toBe('0.0.1');
+  const migrated = migrateExercise(legacy);
+  expect(migrated.schemaVersion).toBe('0.0.1');
+  expect(migrated.sets[0]!.description).toBe('Prototype notes');
+  expect(migrated.sets[0]).not.toHaveProperty('info');
+  expect(legacy.sets[0].info).toBe('Prototype notes');
   expect(() => migrateExercise({ ...legacy, schemaVersion: '0.0.1' })).toThrow();
   expect(() => migrateExercise({ ...legacy, formatVersion: 2 })).toThrow();
 });
@@ -47,6 +52,23 @@ it('accepts single ARGB colors and light/dark pairs at both levels', () => {
     withSet.sets[0].color = color as number;
     expect(() => parseExercise(withSet)).toThrow();
   }
+});
+
+it('accepts Markdown descriptions up to the code point limit at both levels', () => {
+  const described = parseExercise(fixture('valid/description.json'));
+  expect(described.description).toContain('# Warm up first');
+  expect(described.sets[0]!.description).toBe('Stop if anything **hurts**.');
+  // Emoji are single code points but two UTF-16 units, so the limit counts code points.
+  const longest = '😀'.repeat(maxDescriptionLength);
+  expect(parseExercise({ ...hold(), description: longest }).description).toBe(longest);
+  expect(() => parseExercise({ ...hold(), description: `${longest}a` })).toThrow();
+  for (const description of [42, true, ['a'], { text: 'a' }]) {
+    expect(() => parseExercise({ ...hold(), description })).toThrow();
+    const withSet = hold();
+    withSet.sets[0].description = description;
+    expect(() => parseExercise(withSet)).toThrow();
+  }
+  expect(() => parseExercise(fixture('invalid/info-field.json'))).toThrow();
 });
 
 it('requires an explicitly supported exercise semver string', () => {
@@ -95,7 +117,7 @@ it('serializes only validated exercise JSON and round trips every valid fixture'
     const input = fixture(`valid/${file}`);
     const source = encodeExercise(input);
     expect(decodeExercise(source)).toEqual(parseExercise(input));
-    expect(Object.keys(JSON.parse(source)).sort()).toEqual(['color', 'countdownTones', 'schemaVersion', 'sets', 'title']);
+    expect(Object.keys(JSON.parse(source)).sort()).toEqual(['color', 'countdownTones', 'description', 'schemaVersion', 'sets', 'title']);
   }
   expect(() => encodeExercise({ ...hold(), kind: 'exercise' })).toThrow();
   expect(() => encodeExercise(fixture('invalid/empty.json'))).toThrow();

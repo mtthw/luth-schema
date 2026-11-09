@@ -29,9 +29,9 @@ Incompatible document changes require an explicit migration. Package releases
 also use semver independently; pin consumers to a reviewed commit during 0.x.
 
 Validation never silently upgrades a document. `migrateExercise` explicitly
-converts the prototype's `formatVersion: 1` to `schemaVersion: "0.0.1"`, then validates
-the result. Current documents are accepted too. Unknown versions and mixed
-legacy/new version fields are rejected. This is a document migration, not a
+converts the prototype's `formatVersion: 1` to `schemaVersion: "0.0.1"`, renaming
+subset `info` to `description`, then validates the result. Current documents are
+accepted too. Unknown versions and mixed legacy/new version fields are rejected. This is a document migration, not a
 SQLite migration or an exercise's saved revision.
 
 ## Exercise contract
@@ -54,8 +54,11 @@ Each subset has a title, `reps`, `subsets` and `skipLast`.
 - A colour is an unsigned 32-bit ARGB integer, or an object with `light` and
   `dark` ARGB integers for mode-dependent colours. The exercise root and each
   subset accept an optional `color` of either form.
-- `info`, `color`, `durationMicroseconds` and subset `countdownTones` can be
-  omitted or null. SDKs normalize omissions to null without changing input.
+- The exercise root and each subset accept an optional `description`: Markdown
+  text of at most 10,000 Unicode code points, displayed as described in
+  [Descriptions](#descriptions).
+- `description`, `color`, `durationMicroseconds` and subset `countdownTones`
+  can be omitted or null. SDKs normalize omissions to null without changing input.
 - Root tones are defaults. Subset null/omission inherits those defaults; `[]`
   means silence. A group's tone override does not cascade to descendants.
 - Duration is a positive integer no greater than 9,007,199,254,740,991, for
@@ -63,6 +66,31 @@ Each subset has a title, `reps`, `subsets` and `skipLast`.
   such as `1.0` are accepted and normalized to integers in Dart.
 - Unknown fields are rejected, not silently discarded. Inputs are JSON trees;
   runtime objects, aliases, cycles and non-JSON values are not part of the API.
+
+### Descriptions
+
+A `description` is [CommonMark](https://spec.commonmark.org/) source. Apps
+parse it with a CommonMark parser and display only this subset, so the same
+text looks the same everywhere:
+
+- Headings: levels 1–3. Deeper headings display as level 3.
+- Paragraphs, with **bold** (`**`), *italic* (`*`) and both combined.
+- Bulleted (`-`, `*`) and numbered (`1.`) lists, one level deep. Nested lists
+  continue as items of the outer list; an item with several paragraphs joins
+  them with a line break.
+- A soft line break displays as a space; a hard break (two trailing spaces or
+  a backslash) as a line break.
+
+Everything else falls back to plain text and is never interpreted: a link
+shows its text, an image its alt text, code its contents (a code block as a
+paragraph), and raw HTML its literal source. Block quotes show their contents;
+thematic breaks are dropped. Adjacent text with the same formatting merges, and
+empty blocks are dropped.
+
+[`fixtures/markdown`](fixtures/markdown) pairs each `.md` source with the
+expected display as JSON: a list of `heading` (`level`, `spans`), `paragraph`
+(`spans`) and `list` (`ordered`, `items` of spans) blocks, where a span is
+`{text, bold, italic}`. App renderers should test against these fixtures.
 
 JSON Schema checks structure, **not** expanded execution or nesting budgets.
 Use SDK validation for untrusted definitions. `encodeExercise` and `decodeExercise`

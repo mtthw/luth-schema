@@ -1,0 +1,82 @@
+[
+  {
+    "type": "list",
+    "ordered": false,
+    "items": [
+      [
+        {
+          "text": "one",
+          "bold": false,
+          "italic": false
+        }
+      ],
+      [
+        {
+          "text": "two",
+          "bold": true,
+          "italic": false
+        }
+      ]
+    ]
+  },
+  {
+    "type": "list",
+    "ordered": true,
+    "items": [
+      [
+        {
+          "text": "first",
+          "bold": false,
+          "italic": false
+        }
+      ],
+      [
+        {
+          "text": "second",
+          "bold": false,
+          "italic": false
+        }
+      ]
+    ]
+  },
+  {
+    "type": "list",
+    "ordered": false,
+    "items": [
+      [
+        {
+          "text": "outer",
+          "bold": false,
+          "italic": false
+        }
+      ],
+      [
+        {
+          "text": "inner",
+          "bold": false,
+          "italic": false
+        }
+      ],
+      [
+        {
+          "text": "after",
+          "bold": false,
+          "italic": false
+        }
+      ]
+    ]
+  },
+  {
+    "type": "list",
+    "ordered": true,
+    "items": [
+      [
+        {
+          "text": "para one\npara two",
+          "bold": false,
+          "italic": false
+        }
+      ]
+    ]
+  }
+]

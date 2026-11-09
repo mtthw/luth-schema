@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Described hold",
+  "description": "# Warm up first\n\nHold **gently** and keep your *wrists neutral*.\n\n- Shoulders engaged\n- Breathe steadily\n\n1. Hang\n2. Rest",
+  "countdownTones": [],
+  "sets": [{
+    "title": "Hold", "reps": 1, "durationMicroseconds": 10000000,
+    "description": "Stop if anything **hurts**.", "subsets": [], "skipLast": false
+  }]
+}

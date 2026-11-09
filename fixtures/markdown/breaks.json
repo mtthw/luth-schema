@@ -1,0 +1,12 @@
+[
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "line one line two\nline three\nline four",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  }
+]

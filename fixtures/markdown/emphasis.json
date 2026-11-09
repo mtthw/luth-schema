@@ -1,0 +1,82 @@
+[
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "bold",
+        "bold": true,
+        "italic": false
+      },
+      {
+        "text": " and ",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "text": "italic",
+        "bold": false,
+        "italic": true
+      },
+      {
+        "text": " and ",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "text": "both",
+        "bold": true,
+        "italic": true
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "a ",
+        "bold": false,
+        "italic": true
+      },
+      {
+        "text": "b",
+        "bold": true,
+        "italic": true
+      },
+      {
+        "text": " c",
+        "bold": false,
+        "italic": true
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "snake_case_name and 2",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "text": "3",
+        "bold": false,
+        "italic": true
+      },
+      {
+        "text": "4",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "spans": [
+      {
+        "text": "**unclosed and *also",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  }
+]

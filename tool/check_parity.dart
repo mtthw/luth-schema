@@ -15,6 +15,9 @@ Future<void> main() async {
         case 'decode':
           final exercise = decodeExercise(request['value'] as String);
           return {'ok': true, 'source': encodeExercise(exercise)};
+        case 'migrate':
+          final exercise = migrateExercise(request['value']);
+          return {'ok': true, 'source': encodeExercise(exercise)};
         case 'validate':
           parseExercise(request['value']);
           return {'ok': true};

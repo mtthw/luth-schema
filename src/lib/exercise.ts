@@ -14,7 +14,8 @@ export interface ExerciseSet {
   reps: number;
   subsets: ExerciseSet[];
   skipLast: boolean;
-  info: string | null;
+  /** CommonMark text, displayed with the subset described in the README. */
+  description: string | null;
   durationMicroseconds: number | null;
   color: ExerciseColor | null;
   countdownTones: CountdownTone[] | null;
@@ -23,6 +24,8 @@ export interface ExerciseSet {
 export interface ExerciseDefinition {
   schemaVersion: '0.0.1';
   title: string;
+  /** CommonMark text, displayed with the subset described in the README. */
+  description: string | null;
   countdownTones: CountdownTone[];
   color: ExerciseColor | null;
   sets: ExerciseSet[];
@@ -32,6 +35,8 @@ export const maxDepth = 32;
 export const maxNodes = 10_000;
 export const maxSteps = 100_000;
 export const maxSourceBytes = 262_144;
+/** Maximum description length in Unicode code points. */
+export const maxDescriptionLength = 10_000;
 
 const checkSchema = new Ajv2020({ allErrors: false }).compile(schema);
 
@@ -68,7 +73,7 @@ function normalizeSet(value: unknown): ExerciseSet {
   const set = value as ExerciseSet;
   return {
     title: set.title, reps: set.reps, skipLast: set.skipLast,
-    info: set.info ?? null,
+    description: set.description ?? null,
     durationMicroseconds: set.durationMicroseconds ?? null,
     color: set.color ?? null,
     countdownTones: set.countdownTones == null ? null : tones(set.countdownTones),
@@ -96,7 +101,7 @@ export function parseExercise(input: unknown): ExerciseDefinition {
   }
   const value = input as unknown as ExerciseDefinition;
   const exercise: ExerciseDefinition = {
-    schemaVersion: '0.0.1', title: value.title,
+    schemaVersion: '0.0.1', title: value.title, description: value.description ?? null,
     countdownTones: tones(value.countdownTones), color: value.color ?? null,
     sets: value.sets.map(normalizeSet),
   };
@@ -118,11 +123,24 @@ export function decodeExercise(source: string): ExerciseDefinition {
   return parseExercise(JSON.parse(source));
 }
 
+// The prototype called a subset's description `info`.
+function migrateLegacySet(value: unknown): unknown {
+  if (!record(value)) return value;
+  const { info, ...rest } = value;
+  const set: Record<string, unknown> = info === undefined || 'description' in rest ? value : { ...rest, description: info };
+  return Array.isArray(set.subsets)
+    ? { ...set, subsets: set.subsets.map(migrateLegacySet) }
+    : set;
+}
+
 /** Explicit opt-in migration; ordinary validation never accepts legacy fields. */
 export function migrateExercise(input: unknown): ExerciseDefinition {
   if (record(input) && input.formatVersion === 1 && !('schemaVersion' in input)) {
+    // Bound the input (cycles, shared nodes, size) before walking it.
+    preflight(input);
     const { formatVersion: _, ...rest } = input;
-    return parseExercise({ ...rest, schemaVersion: '0.0.1' });
+    const sets = Array.isArray(rest.sets) ? rest.sets.map(migrateLegacySet) : rest.sets;
+    return parseExercise({ ...rest, sets, schemaVersion: '0.0.1' });
   }
   return parseExercise(input);
 }
