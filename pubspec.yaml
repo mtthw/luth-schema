@@ -1,6 +1,6 @@
 name: luth_schema
 description: Shared exercise definitions, validation and migrations for Lúth.
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/mtthw/luth-schema
 publish_to: none
 

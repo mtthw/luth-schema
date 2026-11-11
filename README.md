@@ -3,7 +3,7 @@
 The portable exercise contract for Lúth, with small TypeScript,
 Dart and Go SDKs. No Flutter, React, database, account or server dependency.
 
-This is an initial **0.0.1 draft**. Consumers have not yet been migrated. Nothing
+Definition schema 0.0.1 is an initial **draft**. Consumers have not yet been migrated. Nothing
 here publishes packages or manages releases; there is no release-please setup.
 
 ## Contents
@@ -25,7 +25,7 @@ Two kinds of version exist and are independent:
 
 - The **definition schema version** is the `schemaVersion` field inside each
   exercise document, currently `"0.0.1"`. It describes the document format.
-- The **SDK version** is the release of this repository (the `v0.0.1` Git tag,
+- The **SDK version** is the release of this repository (the `v0.0.2` Git tag,
   `package.json`/`pubspec.yaml` version, and Go module version). A new SDK
   release can fix bugs or add APIs without changing the supported schema version.
 
@@ -119,11 +119,11 @@ npm ci
 npm install ../luth-schema
 ```
 
-Once the `v0.0.1` tag is available on GitHub, use it in the consumer's `package.json`
+Once the `v0.0.2` tag is available on GitHub, use it in the consumer's `package.json`
 (or replace it with a full reviewed commit hash):
 
 ```json
-{"dependencies": {"luth-schema": "git+https://github.com/mtthw/luth-schema.git#v0.0.1"}}
+{"dependencies": {"luth-schema": "git+https://github.com/mtthw/luth-schema.git#v0.0.2"}}
 ```
 
 The Git `prepare` hook builds the TypeScript package; Node >=22.12 and npm are
@@ -154,7 +154,7 @@ dependencies:
 #  luth_schema:
 #    git:
 #      url: https://github.com/mtthw/luth-schema.git
-#      ref: v0.0.1
+#      ref: v0.0.2
 ```
 
 ```dart
@@ -173,11 +173,11 @@ Flutter dependency and can also be used on the web.
 Module path `github.com/mtthw/luth-schema`, package
 `github.com/mtthw/luth-schema/exercise`. It requires Go 1.22 or later and has
 no dependencies outside the standard library. During integration, use a local
-replacement; once the `v0.0.1` tag is on GitHub, require that version (the Go
+replacement; once the `v0.0.2` tag is on GitHub, require that version (the Go
 module version is the repository's SDK tag, not the schema version):
 
 ```sh
-go get github.com/mtthw/luth-schema@v0.0.1
+go get github.com/mtthw/luth-schema@v0.0.2
 # Or, while integrating locally:
 go mod edit -replace github.com/mtthw/luth-schema=../luth-schema
 ```
@@ -260,15 +260,17 @@ their acceptance and encoded bytes with TypeScript, in both directions:
 validation, normalization, serialization, numeric and Unicode boundaries,
 JSON syntax, duplicate keys, size limits and migration.
 
-## First Git release
+## Git releases
 
 No npm, pub.dev or Go proxy publication step is required: consumers can install from the
 public Git repository. `private: true` and `publish_to: none` intentionally prevent
 accidental registry publication.
 
-Before releasing, run `just check` and `just pack-check`, review the files, commit
-them and create an annotated `v0.0.1` tag on that commit. The commit and tag must
-then be pushed by the maintainer before the dependency examples above will work.
+To release, bump the SDK version in `package.json`, `package-lock.json`,
+`pubspec.yaml` and the dependency examples above (not the schema version), run
+`just check` and `just pack-check`, review and commit the files, then create an
+annotated `vX.Y.Z` tag on that commit. The commit and tag must then be pushed by
+the maintainer before the dependency examples above will work.
 The same `vX.Y.Z` tag is the Go module version, because `go.mod` is at the
 repository root.
 Never move a released tag. Commit each consumer's lockfile after installing it.
