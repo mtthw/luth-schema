@@ -59,6 +59,8 @@ func appendSets(b []byte, sets []Set) []byte {
 		}
 		b = append(b, `,"reps":`...)
 		b = strconv.AppendInt(b, int64(set.Reps), 10)
+		b = append(b, `,"skipFirst":`...)
+		b = strconv.AppendBool(b, set.SkipFirst)
 		b = append(b, `,"skipLast":`...)
 		b = strconv.AppendBool(b, set.SkipLast)
 		b = append(b, `,"subsets":`...)

@@ -111,7 +111,7 @@ func setsFromJSON(value any, depth int) ([]Set, error) {
 	for i, item := range items {
 		object, err := objectWithKeys(item, "subset",
 			[]string{"title", "reps", "subsets", "skipLast"},
-			[]string{"description", "durationMicroseconds", "color", "countdownTones"})
+			[]string{"description", "durationMicroseconds", "color", "countdownTones", "skipFirst"})
 		if err != nil {
 			return nil, err
 		}
@@ -136,6 +136,11 @@ func setsFromJSON(value any, depth int) ([]Set, error) {
 		}
 		if set.SkipLast, ok = object["skipLast"].(bool); !ok {
 			return nil, invalidf("skipLast must be a boolean")
+		}
+		if value, present := object["skipFirst"]; present {
+			if set.SkipFirst, ok = value.(bool); !ok {
+				return nil, invalidf("skipFirst must be a boolean")
+			}
 		}
 		if set.Color, err = colorFromJSON(object["color"]); err != nil {
 			return nil, err

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "0.0.1", "title": "Ancestor skip cannot hide an oversized subtree", "countdownTones": [],
+  "sets": [{
+    "title": "Outer", "reps": 1, "skipFirst": true, "skipLast": false,
+    "subsets": [{
+      "title": "Over budget", "reps": 1, "skipLast": false,
+      "subsets": [
+        {"title": "Hold", "reps": 100000, "durationMicroseconds": 1, "subsets": [], "skipLast": false},
+        {"title": "Extra", "reps": 1, "subsets": [], "skipLast": false}
+      ]
+    }]
+  }]
+}

@@ -124,7 +124,13 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
   _keys(
     set,
     ['title', 'reps', 'subsets', 'skipLast'],
-    ['description', 'durationMicroseconds', 'color', 'countdownTones'],
+    [
+      'description',
+      'durationMicroseconds',
+      'color',
+      'countdownTones',
+      'skipFirst',
+    ],
   );
   final color = _color(set['color']);
   final children = _list(set['subsets']);
@@ -136,10 +142,14 @@ JsonObject _subset(Object? value, int depth, _Budget budget) {
     _fail('A timed subset cannot contain subsets');
   }
   if (set['skipLast'] is! bool) _fail('Invalid skipLast');
+  if (set.containsKey('skipFirst') && set['skipFirst'] is! bool) {
+    _fail('Invalid skipFirst');
+  }
   return {
     'title': _title(set['title']),
     'reps': _integer(set['reps'], 1, maxSteps),
     'skipLast': set['skipLast'],
+    'skipFirst': set['skipFirst'] ?? false,
     'description': _description(set['description']),
     'durationMicroseconds': duration,
     'color': color,
@@ -164,7 +174,9 @@ int countSteps(List<dynamic> sets) {
         : set['durationMicroseconds'] != null
         ? reps
         : 1;
-    count += leaves - (set['skipLast'] == true && leaves > 0 ? 1 : 0);
+    final skips =
+        (set['skipFirst'] == true ? 1 : 0) + (set['skipLast'] == true ? 1 : 0);
+    count += leaves > skips ? leaves - skips : 0;
     if (count > maxSteps) {
       _fail('Exercise expands to too many executable steps');
     }
@@ -172,7 +184,7 @@ int countSteps(List<dynamic> sets) {
   return count;
 }
 
-/// Validate and copy a definition, normalizing optional fields to null.
+/// Validate and copy a definition, defaulting skipFirst to false and nullables to null.
 JsonObject parseExercise(Object? input) {
   final value = object(input);
   _keys(

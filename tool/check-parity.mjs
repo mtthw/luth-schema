@@ -114,6 +114,7 @@ for (const [key, values] of Object.entries({
   color: [0, 4294967295, -1, 4294967296, 1.5, '0', true, { light: 1 }, { dark: 1 }, { light: 1, dark: -1 }, { light: 1, dark: 2, extra: 3 }, { light: 1, dark: null }, [1, 2]],
   durationMicroseconds: [0, -1, 0.5, 1, 9007199254740991, 9007199254740992, '1', null],
   skipLast: [0, null, 'false', true],
+  skipFirst: [0, null, 'false', false, true],
   subsets: [null, {}, [1]],
   countdownTones: [false, [], null, [{}], [{ pitch: 'Cs6', length: 'short' }], [{ pitch: 'E2\n', length: 'short' }], [{ pitch: 'C4', length: 'medium' }], [{ pitch: 'C4', length: 'short', extra: 1 }]],
 })) {

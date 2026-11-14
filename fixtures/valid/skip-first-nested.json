@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "0.0.1", "title": "Nested first skips", "countdownTones": [],
+  "sets": [{
+    "title": "Outer", "reps": 2, "skipFirst": true, "skipLast": false,
+    "subsets": [{
+      "title": "Inner", "reps": 2, "skipFirst": true, "skipLast": false,
+      "subsets": [
+        {"title": "Rest", "reps": 1, "subsets": [], "skipLast": false},
+        {"title": "Work", "reps": 1, "subsets": [], "skipLast": false}
+      ]
+    }]
+  }]
+}

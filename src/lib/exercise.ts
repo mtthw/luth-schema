@@ -13,6 +13,8 @@ export interface ExerciseSet {
   title: string;
   reps: number;
   subsets: ExerciseSet[];
+  /** Trim the first expanded step once; omitted JSON input defaults to false. */
+  skipFirst: boolean;
   skipLast: boolean;
   /** CommonMark text, displayed with the subset described in the README. */
   description: string | null;
@@ -72,7 +74,7 @@ function tones(value: unknown): CountdownTone[] {
 function normalizeSet(value: unknown): ExerciseSet {
   const set = value as ExerciseSet;
   return {
-    title: set.title, reps: set.reps, skipLast: set.skipLast,
+    title: set.title, reps: set.reps, skipFirst: set.skipFirst ?? false, skipLast: set.skipLast,
     description: set.description ?? null,
     durationMicroseconds: set.durationMicroseconds ?? null,
     color: set.color ?? null,
@@ -86,13 +88,13 @@ export function countSteps(sets: ExerciseSet[]): number {
   for (const set of sets) {
     const leaves = set.subsets.length ? countSteps(set.subsets) * set.reps
       : set.durationMicroseconds !== null ? set.reps : 1;
-    count += leaves - (set.skipLast && leaves > 0 ? 1 : 0);
+    count += Math.max(0, leaves - (set.skipFirst ? 1 : 0) - (set.skipLast ? 1 : 0));
     if (count > maxSteps) throw new Error('Exercise expands to too many executable steps');
   }
   return count;
 }
 
-/** Validate and copy a definition, normalizing omitted optional fields to null. */
+/** Validate and copy a definition, normalizing omissions to null or skipFirst=false. */
 export function parseExercise(input: unknown): ExerciseDefinition {
   preflight(input);
   if (!checkSchema(input)) {

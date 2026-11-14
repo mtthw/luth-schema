@@ -15,7 +15,7 @@ const holdSource = `{"schemaVersion":"0.0.1","title":"Simple hold","countdownTon
 
 const holdEncoded = `{"color":null,"countdownTones":[{"length":"short","pitch":"C5"}],"description":null,` +
 	`"schemaVersion":"0.0.1","sets":[{"color":null,"countdownTones":null,"description":null,` +
-	`"durationMicroseconds":30000000,"reps":1,"skipLast":false,"subsets":[],"title":"Hold"}],"title":"Simple hold"}`
+	`"durationMicroseconds":30000000,"reps":1,"skipFirst":false,"skipLast":false,"subsets":[],"title":"Hold"}],"title":"Simple hold"}`
 
 func fixtures(t testing.TB, kind string) map[string][]byte {
 	t.Helper()
@@ -120,6 +120,28 @@ func TestNormalizesOptionalFields(t *testing.T) {
 	d.CountdownTones = nil // a nil root slice still encodes as []
 	if got := encode(t, d); !strings.Contains(got, `"countdownTones":[],"description"`) {
 		t.Errorf("nil root tones encode as %s", got)
+	}
+}
+
+func TestSkipFirst(t *testing.T) {
+	if decode(t, holdSource).Sets[0].SkipFirst {
+		t.Fatal("omitted skipFirst must default to false")
+	}
+	for _, name := range []string{"skip-first.json", "skip-first-nested.json"} {
+		d := decode(t, string(fixtures(t, "valid")[name]))
+		if got, err := exercise.CountSteps(d.Sets); err != nil || got != 5 {
+			t.Errorf("%s: steps = %d, %v", name, got, err)
+		}
+	}
+	for _, value := range []string{"null", "0", `"true"`, "[]"} {
+		rejects(t, withHoldSet("skipFirst", value))
+	}
+	d := decode(t, holdSource)
+	d.Sets[0].Reps = 3
+	d.Sets[0].SkipFirst = true
+	d.Sets[0].SkipLast = true
+	if got, err := exercise.CountSteps(d.Sets); err != nil || got != 1 {
+		t.Errorf("timed ends: steps = %d, %v", got, err)
 	}
 }
 

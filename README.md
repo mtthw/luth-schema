@@ -56,6 +56,10 @@ Each subset has a title, `reps`, `subsets` and `skipLast`.
   times. Manual leaf `reps` is a prescription, not repeated execution.
 - `skipLast` removes the last expanded leaf of that node. An exercise must
   still contain at least one executable step.
+- Optional `skipFirst` defaults to `false` and removes the first expanded leaf
+  once after all repetitions, not once per round. Both flags may be enabled;
+  trimming never produces a negative count. Child skips apply before parent skips.
+  This is a revision of draft schema `0.0.1`; older SDKs reject `skipFirst`.
 - A timed node cannot have children. Nesting is at most 32 subset levels,
   with at most 10,000 nodes and 100,000 executable steps. Every subtree must
   obey the step budget, even if an ancestor would skip a step.

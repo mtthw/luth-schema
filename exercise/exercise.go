@@ -63,6 +63,7 @@ type Set struct {
 	Title                string
 	Reps                 int
 	Subsets              []Set
+	SkipFirst            bool
 	SkipLast             bool
 	Description          *string
 	DurationMicroseconds *int64

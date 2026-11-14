@@ -73,6 +73,7 @@
           "items": { "$ref": "#/$defs/subset" }
         },
         "countdownTones": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/tones" }] },
+        "skipFirst": { "type": "boolean", "default": false },
         "skipLast": { "type": "boolean" }
       },
       "allOf": [{

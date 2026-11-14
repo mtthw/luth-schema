@@ -90,6 +90,25 @@ it('applies manual, timed, group repetition and skipLast semantics', () => {
   expect(() => parseExercise(timed)).toThrow();
 });
 
+it('defaults skipFirst and trims expanded ends without negative counts', () => {
+  expect(parseExercise(hold()).sets[0]!.skipFirst).toBe(false);
+  for (const name of ['skip-first', 'skip-first-nested']) {
+    const exercise = parseExercise(fixture(`valid/${name}.json`));
+    expect(countSteps(exercise.sets)).toBe(5);
+    expect(decodeExercise(encodeExercise(exercise))).toEqual(exercise);
+  }
+  for (const skipFirst of [null, 0, 'true', []]) {
+    const input = hold();
+    input.sets[0].skipFirst = skipFirst;
+    expect(validateExercise(input).ok).toBe(false);
+  }
+  const timed = hold();
+  timed.sets[0].reps = 3;
+  timed.sets[0].skipFirst = true;
+  timed.sets[0].skipLast = true;
+  expect(countSteps(parseExercise(timed).sets)).toBe(1);
+});
+
 it('bounds depth, nodes, source size, and cyclic objects', () => {
   const input = hold();
   let node = input.sets[0];

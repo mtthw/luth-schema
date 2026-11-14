@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.0.1",
+  "title": "Trim expanded ends",
+  "countdownTones": [],
+  "sets": [
+    {"title": "Get ready", "reps": 1, "durationMicroseconds": 10000000, "subsets": [], "skipLast": false},
+    {
+      "title": "Rounds", "reps": 3, "skipFirst": true, "skipLast": true,
+      "subsets": [
+        {"title": "Rest", "reps": 1, "durationMicroseconds": 20000000, "subsets": [], "skipLast": false},
+        {"title": "Hang", "reps": 1, "durationMicroseconds": 6000000, "subsets": [], "skipLast": false}
+      ]
+    },
+    {"title": "Empty", "reps": 1, "subsets": [], "skipFirst": true, "skipLast": true}
+  ]
+}

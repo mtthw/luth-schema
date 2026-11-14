@@ -122,7 +122,7 @@ func validateTones(tones []Tone) error {
 
 // CountSteps counts the executable steps of validated sets without expanding
 // repeated groups. A timed leaf runs reps times, a manual leaf once, a group
-// repeats its children reps times, and skipLast drops a node's last step.
+// repeats its children reps times, and skipFirst/skipLast trim its expanded ends.
 // Every subtree must stay within MaxSteps.
 func CountSteps(sets []Set) (int, error) {
 	count, err := countSteps(sets, 0)
@@ -147,6 +147,9 @@ func countSteps(sets []Set, depth int) (int64, error) {
 			leaves = int64(set.Reps)
 		default:
 			leaves = 1
+		}
+		if set.SkipFirst && leaves > 0 {
+			leaves--
 		}
 		if set.SkipLast && leaves > 0 {
 			leaves--

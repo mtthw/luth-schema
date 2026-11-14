@@ -8,6 +8,20 @@ JsonObject fixture(String name) =>
 JsonObject hold() => fixture('valid/hold.json');
 
 void main() {
+  test('skipFirst defaults false and trims expanded ends', () {
+    expect(hold()['sets'][0]['skipFirst'], isNull);
+    expect(parseExercise(hold())['sets'][0]['skipFirst'], isFalse);
+    for (final name in ['skip-first', 'skip-first-nested']) {
+      final exercise = parseExercise(fixture('valid/$name.json'));
+      expect(countSteps(exercise['sets'] as List<dynamic>), 5);
+      expect(decodeExercise(encodeExercise(exercise)), exercise);
+    }
+    final timed = hold();
+    timed['sets'][0]['reps'] = 3;
+    timed['sets'][0]['skipFirst'] = true;
+    timed['sets'][0]['skipLast'] = true;
+    expect(countSteps(parseExercise(timed)['sets'] as List<dynamic>), 1);
+  });
   for (final validity in ['valid', 'invalid']) {
     for (final file in Directory(
       'fixtures/$validity',
